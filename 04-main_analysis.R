@@ -167,7 +167,7 @@ model_data_apoe$APOE4_status <-
     "44" = "Positive"
   ) %>%
   droplevels() # Drop unused levels ("0")
-model_data_apoe <- model_data_apoe[,c(1:8,636,12:635)]
+model_data_apoe <- model_data_apoe[,c(1:8,636,9:635)]
 model_data_apoe$APOE4_status <- factor(model_data_apoe$APOE4_status, levels = c("Negative", "Positive"))
 
 
