@@ -156,7 +156,7 @@ effect_pval_age_ca$padj <- p.adjust(effect_pval_age_ca$pval, method = "BH")
 model_data_apoe <-  
   model_data_all %>%
   filter(APOE != "0") %>%
-  filter(Status %in% c("CA", "CO", "TREM2"))
+  filter(Status == "CA")
 model_data_apoe$APOE4_status <- 
   recode(
     model_data_apoe$APOE,
