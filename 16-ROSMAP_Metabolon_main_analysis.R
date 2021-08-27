@@ -37,3 +37,30 @@ effect_pval_ad$padj_ROSMAP_metabolon <- p.adjust(effect_pval_ad$pval_ROSMAP_meta
 effect_pval_ad <- effect_pval_ad[order(effect_pval_ad$padj_ROSMAP_metabolon),]
 
 # write.csv(effect_pval_ad, "data/16-ROSMAP_Metabolon_effect_pval_ad.csv", row.names = FALSE)
+
+
+### Linear regression for APOE in sAD
+model_data_apoe <-  
+  model_data %>%
+  filter(!is.na(apoe_status)) %>%
+  filter(Status == "AD")
+
+
+# Make a data frame with effect and p-value
+get_effect_pval_APOE <- function(metab_name, model_data) {
+  readings <- cbind(model_data[,1:20], model_data[,metab_name])
+  colnames(readings)[ncol(readings)] <- "reading"  
+  readings <- readings[!is.na(readings$reading),]
+  model <- glm(reading ~ apoe_status + age_death + msex + pmi,
+               data = readings, family = gaussian)
+  data.frame(
+    metab_name = metab_name,
+    effect = as.matrix(summary(model)$coefficients)["apoe_statuspositive","Estimate"],
+    pval = as.matrix(summary(model)$coefficients)["apoe_statuspositive","Pr(>|t|)"]
+  )
+}
+
+effect_pval_apoe <- ldply(colnames(model_data_apoe[,-1:-20]), 
+                          get_effect_pval_APOE,
+                          model_data = model_data_apoe)
+effect_pval_apoe$padj <- p.adjust(effect_pval_apoe$pval, method = "BH")
