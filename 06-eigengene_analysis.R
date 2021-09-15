@@ -4,30 +4,14 @@ library(FactoMineR)
 # 17 metabolites were significant after correction in ADAD vs CO, and nominally
 # significant in AD vs CO and TREM2 vs CO
 # Serotonin was part of the 17 but was removed because of high missingness in the ADAD group
-metab_names <- c(
-  "1,5-anhydroglucitol (1,5-AG)",
-  "2-methylcitrate/homocitrate",
-  "3-hydroxy-2-ethylpropionate",
-  "alpha-tocopherol",
-  "aspartate",
-  "beta-citrylglutamate",
-  "CDP-ethanolamine",
-  "ergothioneine",
-  "gamma-glutamylthreonine",
-  "glutamate",
-  "glutarate (C5-DC)",
-  "glycerophosphoinositol*",
-  "N-acetylglutamate",
-  "N-carbamoylglutamate",
-  "nicotinamide",
-  "retinol (Vitamin A)")
+metabs_16 <- readRDS("data/05-metabs_16.rds")
 
 # Get scaled, imputed data for PCA
-ScaledImp_avgreps <- readRDS("data/03-ScaledImp_avgreps.rds")
-ScaledImp_pca <- as.data.frame(t(ScaledImp_avgreps)) %>% select(all_of(metab_names))
+ScaledImp_avgreps <- read.csv("data/03-ScaledImp_avgreps.csv", stringsAsFactors = FALSE, row.names = 1)
+ScaledImp_pca <- as.data.frame(t(ScaledImp_avgreps)) %>% select(all_of(as.character(metabs_16)))
 
 # saveRDS(ScaledImp_pca, "data/05-ScaledImp_pca_16.rds")
-model_data_all <- readRDS("data/05-model_data_all.rds")
+model_data_all <- readRDS("data/04-model_data_all.rds")
 CA_CO_TREM2_ADAD <- row.names(model_data_all)[model_data_all$Status %in% c("CO", "CA", "ADAD", "TREM2")]
 ScaledImp_pca_CA_CO_TREM2_ADAD <- ScaledImp_pca[row.names(ScaledImp_pca) %in% CA_CO_TREM2_ADAD,]
 
@@ -36,7 +20,7 @@ pca_res <- PCA(ScaledImp_pca_CA_CO_TREM2_ADAD, ncp=10, graph = FALSE)
 PC1 <- pca_res$ind$coord[,1]
 PC1_df <- data.frame(TubeBarcode = names(PC1), PC1 = PC1)
 
-# saveRDS(PC1_df, "data/05-eigengene_df_16.rds")
+# saveRDS(PC1_df, "data/06-eigengene_df_16.rds")
 
 AAO_df <- readRDS("data/00-age_at_onset_df.rds")
 
@@ -53,7 +37,7 @@ model_data_duration <-
 # Calculate disease duration
 model_data_duration$duration <- model_data_duration$age_death - model_data_duration$AAO
 # Rearrange data table
-model_data_duration <- model_data_duration[,c(1:13, 641, 14:640)]
+model_data_duration <- model_data_duration[,c(1:13, 638, 14:637)]
 
 # saveRDS(model_data_duration, "data/06-model_data_duration.rds")
 
@@ -74,7 +58,7 @@ model_data_duration_PC1 <-
   PC1_df %>%
   inner_join(model_data_duration_small)
 
-# saveRDS(model_data_duration_PC1, "data/05-model_data_duration_PC1_16.rds")
+# saveRDS(model_data_duration_PC1, "data/06-model_data_duration_PC1_16.rds")
 
 model_data_duration_PC1_CA <- model_data_duration_PC1  %>%
   filter(Status == "CA")
@@ -139,7 +123,7 @@ model_data_PC1_tau <-
 mod_tau_PC1_withage <- glm(PC1 ~ BraakTau + Age + Sex + PMI, data = model_data_PC1_tau, family = gaussian)
 summary(mod_tau_PC1_withage)
 
-## Regression for PC1 ~ BraakAbeta for 17 metabs
+## Regression for PC1 ~ BraakAbeta for 16 metabs
 model_data_abeta_small <- 
   model_data_all %>%
   select(
@@ -203,25 +187,10 @@ summary(mod_apoe_PC1_withage)
 
 
 ## Remove nicotinamide and try associations again
-metab_names_nonic <- c(
-  "1,5-anhydroglucitol (1,5-AG)",
-  "2-methylcitrate/homocitrate",
-  "3-hydroxy-2-ethylpropionate",
-  "alpha-tocopherol",
-  "aspartate",
-  "beta-citrylglutamate",
-  "CDP-ethanolamine",
-  "ergothioneine",
-  "gamma-glutamylthreonine",
-  "glutamate",
-  "glutarate (C5-DC)",
-  "glycerophosphoinositol*",
-  "N-acetylglutamate",
-  "N-carbamoylglutamate",
-  "retinol (Vitamin A)")
+metabs_16_nonic <- setdiff(metabs_16, 432)
 
 # Get scaled, imputed data for PCA
-ScaledImp_pca_nonic <- as.data.frame(t(ScaledImp_avgreps)) %>% select(all_of(metab_names_nonic))
+ScaledImp_pca_nonic <- as.data.frame(t(ScaledImp_avgreps)) %>% select(all_of(as.character(metabs_16_nonic)))
 
 # saveRDS(ScaledImp_pca, "data/05-ScaledImp_pca_16.rds")
 CA_CO_TREM2_ADAD <- row.names(model_data_all)[model_data_all$Status %in% c("CO", "CA", "ADAD", "TREM2")]
@@ -259,14 +228,7 @@ model_data_duration_PC1_nonic <-
   PC1_df_nonic %>%
   inner_join(model_data_duration_small)
 
-# saveRDS(model_data_duration_PC1, "data/05-model_data_duration_PC1_16.rds")
-
 model_data_duration_PC1_CA_nonic <- model_data_duration_PC1_nonic  %>%
   filter(Status == "CA")
 mod1_nonic <- glm(PC1 ~ duration + age_death + Sex + PMI, data = model_data_duration_PC1_CA_nonic, family = gaussian)
 summary(mod1_nonic)
-
-
-
-
-

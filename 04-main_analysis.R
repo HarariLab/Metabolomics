@@ -2,10 +2,11 @@
 
 library(plyr)
 library(dplyr)
+setwd("~/metabolomics")
 
 Origscale_clean_transformed <- read.csv("data/02-Origscale_clean_transformed.csv", check.names = FALSE, row.names = 1)
 Origscale_clean_avgreps <- read.csv("data/01-Origscale_clean_avgreps.csv")
-pheno_avg <- readRDS("data/03-pheno_avg.rds")
+pheno_avg <- read.csv("data/03-pheno_avg.csv", row.names = 1, stringsAsFactors = FALSE)
 
 metabs <- as.data.frame(Origscale_clean_transformed[row.names(Origscale_clean_transformed) %in% row.names(pheno_avg),])
 
@@ -47,12 +48,15 @@ covariates$BraakTau <-
   na_if(0)
 
 model_data_all <- cbind(covariates, metabs, stringsAsFactors = TRUE)
-saveRDS(model_data_all, "data/04-model_data_all.rds")
+# saveRDS(model_data_all, "data/04-model_data_all.rds")
+
+metab_meta <- Origscale_clean_avgreps[,1:13]
+# saveRDS(metab_meta, "data/04-metab_meta.rds")
 
 ## Define function for linear regression analysis
 # Make a data frame with effect and p-value
-get_effect_pval <- function(metab_name, model_data, status, ADAD = FALSE) {
-  readings <- cbind(model_data[,1:ncol(covariates)], model_data[,metab_name])
+get_effect_pval <- function(metab_id, model_data, status, ADAD = FALSE) {
+  readings <- cbind(model_data[,1:ncol(covariates)], model_data[,metab_id])
   colnames(readings)[ncol(readings)] <- "reading"  
   readings <- readings[!is.na(readings$reading),]
   if(ADAD == TRUE) {
@@ -64,7 +68,7 @@ get_effect_pval <- function(metab_name, model_data, status, ADAD = FALSE) {
                  data = readings, family = gaussian)
   }
   data.frame(
-    metab_name = metab_name,
+    metab_id = metab_id,
     effect = as.matrix(summary(model)$coefficients)[paste("Status", status, sep = ""),"Estimate"],
     pval = as.matrix(summary(model)$coefficients)[paste("Status", status, sep = ""),"Pr(>|t|)"]
   )
@@ -83,6 +87,11 @@ adad_effect_pval_df <- ldply(colnames(model_data_adad[,-1:-ncol(covariates)]),
                              status = "ADAD", 
                              ADAD = TRUE)
 adad_effect_pval_df$padj <- p.adjust(adad_effect_pval_df$pval, method = "BH")
+# sum(adad_effect_pval_df$padj < 0.05)
+
+# Super pathways for ADAD metabolites?
+sig_metabs_adad <- adad_effect_pval_df$metab_id[adad_effect_pval_df$padj < 0.05]
+table(metab_meta$SUPER.PATHWAY[metab_meta$CHEMICAL.ID %in% sig_metabs_adad])
 
 ## Linear regression for TREM2 vs CO
 model_data_trem2 <- 
@@ -121,8 +130,23 @@ all_effect_pval_df <-
   adad_effect_pval_df %>%
   inner_join(ca_effect_pval_df) %>%
   inner_join(trem2_effect_pval_df)
+all_effect_pval_df$metab_id <- as.integer(as.character(all_effect_pval_df$metab_id))
+
+all_effect_pval_df <- inner_join(metab_meta, all_effect_pval_df, by = c("CHEMICAL.ID" = "metab_id"))
 
 # write.csv(all_effect_pval_df, "data/04-effect_pval_adad_ca_trem2.csv", row.names = FALSE)
+
+p180_metabolon_reference <- read.csv("data/p180_metabolon_reference.csv")
+p180_metabolon_reference$p180_metabolite <- as.character(p180_metabolon_reference$p180_metabolite)
+p180_metabolon_reference$p180_metabolite[p180_metabolon_reference$p180_metabolite == "lle"] <- "Ile"
+
+# Get effect and p-values for Metabolon metabs of interest (including those from Wang, et al.)
+Metabolon_pval_effect <-
+  all_effect_pval_df %>%
+  left_join(Origscale_clean_avgreps[,c(2, 5, 7, 13)], by= "BIOCHEMICAL") %>%
+  left_join(p180_metabolon_reference[,c(2,4)], by = c("BIOCHEMICAL" = "Metabolon_biochemical"))
+# saveRDS(Metabolon_pval_effect, "data/04-Metabolon_pval_effect_withchemID.rds")
+
 
 
 ## Linear regression modeling metabolite values by age, sex, and PMI with only sAD samples
@@ -131,14 +155,14 @@ model_data_caonly <-
   filter(Status == "CA")
 
 # Make a data frame with effect and p-value
-get_effect_pval_age <- function(metab_name, model_data) {
-  readings <- cbind(model_data[,1:ncol(covariates)], model_data[,metab_name])
+get_effect_pval_age <- function(metab_id, model_data) {
+  readings <- cbind(model_data[,1:ncol(covariates)], model_data[,metab_id])
   colnames(readings)[ncol(readings)] <- "reading"  
   readings <- readings[!is.na(readings$reading),]
-  model <- glm(reading ~ Age + Sex,
+  model <- glm(reading ~ Age + Sex + PMI,
                data = readings, family = gaussian)
   data.frame(
-    metab_name = metab_name,
+    metab_id = metab_id,
     effect = as.matrix(summary(model)$coefficients)["Age","Estimate"],
     pval = as.matrix(summary(model)$coefficients)["Age","Pr(>|t|)"]
   )
@@ -149,14 +173,19 @@ effect_pval_age_ca <- ldply(colnames(model_data_caonly[,-1:-ncol(covariates)]),
                             get_effect_pval_age,
                             model_data = model_data_caonly)
 effect_pval_age_ca$padj <- p.adjust(effect_pval_age_ca$pval, method = "BH")
+sum(effect_pval_age_ca$padj < 0.05)
+all(effect_pval_age_ca$metab_id == metab_meta$CHEMICAL.ID)
+effect_pval_age_ca$metab_name <- metab_meta$BIOCHEMICAL
+# write.csv(effect_pval_age_ca, "data/04-effect_pval_age.csv", row.names = FALSE)
 
-
+# How many metabolites significant in ADAD are independent of age?
+sum(!adad_effect_pval_df$metab_id[adad_effect_pval_df$ADADvsCO_padj < 0.05] %in% effect_pval_age_ca$metab_id[effect_pval_age_ca$padj < 0.05])
 
 ### Linear regression for APOE
 model_data_apoe <-  
   model_data_all %>%
   filter(APOE != "0") %>%
-  filter(Status == "CA")
+  filter(Status %in% c("CA"))
 model_data_apoe$APOE4_status <- 
   recode(
     model_data_apoe$APOE,
@@ -172,24 +201,28 @@ model_data_apoe$APOE4_status <- factor(model_data_apoe$APOE4_status, levels = c(
 
 
 # Make a data frame with effect and p-value
-get_effect_pval_APOE <- function(metab_name, model_data) {
-  readings <- cbind(model_data[,1:(ncol(covariates) + 1)], model_data[,metab_name])
+get_effect_pval_APOE <- function(metab_id, model_data) {
+  readings <- cbind(model_data[,1:(ncol(covariates) + 1)], model_data[,metab_id])
   colnames(readings)[ncol(readings)] <- "reading"  
   readings <- readings[!is.na(readings$reading),]
   model <- glm(reading ~ APOE4_status + Age + Sex + PMI,
                data = readings, family = gaussian)
   data.frame(
-    metab_name = metab_name,
+    metab_id = metab_id,
     effect = as.matrix(summary(model)$coefficients)["APOE4_statusPositive","Estimate"],
     pval = as.matrix(summary(model)$coefficients)["APOE4_statusPositive","Pr(>|t|)"]
   )
 }
 
 effect_pval_apoe <- ldply(colnames(model_data_apoe[,-1:-(ncol(covariates) + 1)]), 
-                            get_effect_pval_APOE,
-                            model_data = model_data_apoe)
+                          get_effect_pval_APOE,
+                          model_data = model_data_apoe)
 effect_pval_apoe$padj <- p.adjust(effect_pval_apoe$pval, method = "BH")
 
+all(effect_pval_apoe$metab_id == Origscale_clean_avgreps$CHEMICAL.ID)
+effect_pval_apoe$metab_name <- Origscale_clean_avgreps$BIOCHEMICAL
+
+# write.csv(effect_pval_apoe, "data/04-effect_pval_apoe.csv", row.names = FALSE)
 
 ### Run regressions again matching for CDR and Braak scores
 ## Linear regression of ADAD vs CO with only high CDR (CDR = 3)
@@ -320,20 +353,3 @@ high_CDR_effects_pvals <-
   inner_join(ADAD_highCDR_effect_pval_df, ca_highCDR_effect_pval_df) %>%
   inner_join(trem2_highCDR_effect_pval_df)
 # write.csv(high_CDR_effects_pvals, "data/04-highCDR_effect_pvals.csv", row.names = FALSE)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

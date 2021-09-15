@@ -17,11 +17,6 @@ for (module in module_list) source(module, local=TRUE)
 # Data for boxplots tab table
 metab_meta <- readRDS("data/metab_meta.rds")
 
-# For homepage to create phenotype table
-pheno_avg <- readRDS("data/03-pheno_avg.rds")
-trem2_ind <- pheno_avg$TREM2_all_variants != "0" & !is.na(pheno_avg$TREM2_all_variants)
-pheno_avg$Final_CACO[trem2_ind] <- "TREM2"
-
 # For boxplots
 subject_status <- readRDS("data/subject_status.rds")
 

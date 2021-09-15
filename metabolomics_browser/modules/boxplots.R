@@ -61,8 +61,8 @@ boxplots <- function(input, output, session, box_var) {
     )
     selected <- input$table_rows_selected
     metab_counts <- data.frame(
-      colnames(Origscale_clean_transformed_t)[1:454],
-      unlist(c(Origscale_clean_transformed_t[Origscale_clean_transformed_t$BIOCHEMICAL == metab_meta[selected,1],1:454]))
+      colnames(Origscale_clean_transformed_t)[1:453],
+      unlist(c(Origscale_clean_transformed_t[Origscale_clean_transformed_t$BIOCHEMICAL == metab_meta[selected,1],1:453]))
     )
     colnames(metab_counts) <- c("id", "count")
     #metab_counts$count <- log10(metab_counts$count)
@@ -91,7 +91,8 @@ boxplots <- function(input, output, session, box_var) {
         pointpos = 0,
         text = paste("Transformed Reading: ", 
                      format(metab_by_subject()$count[metab_by_subject()$CACO %in% c("CO", "AD", "TREM2", "ADAD")], digits = 3)),
-        hoverinfo = list("median", "text")
+        hoverinfo = list("median", "text"),
+        source = "B"
       ) %>%
         layout(
           title = metab_meta[input$table_rows_selected,1],
@@ -114,7 +115,8 @@ boxplots <- function(input, output, session, box_var) {
         pointpos = 0,
         text = paste("Log10 Reading: ", 
                      format(metab_by_subject()$count, digits = 3)),
-        hoverinfo = list("median", "text")
+        hoverinfo = list("median", "text"),
+        source = "B"
         ) %>%
         layout(
           title = metab_meta[input$table_rows_selected,1],

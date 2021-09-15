@@ -26,7 +26,7 @@ while(j <= nrow(Origscale_log)){
 
 # Export IQR adjusted, rescaled, and log-transformed data
 Origscale_clean_transformed <- as.data.frame(transformed)
-colnames(Origscale_clean_transformed) <- Origscale_clean_avgreps$BIOCHEMICAL
+colnames(Origscale_clean_transformed) <- Origscale_clean_avgreps$CHEMICAL.ID
 # write.csv(Origscale_clean_transformed, "data/02-Origscale_clean_transformed.csv")
                       
                       

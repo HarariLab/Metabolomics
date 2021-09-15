@@ -85,6 +85,13 @@ drop <- as.character(metab_meta_missing20$SHORT_NAME[!metab_meta_missing20$SHORT
 metab_data_filtered <- metab_data[,setdiff(colnames(metab_data)[9:ncol(metab_data)], drop)]
 metab_meta_filtered <- metab_meta[metab_meta$SHORT_NAME %in% colnames(metab_data_filtered),]
 
+# Replace missing values for restored metabolites with minimum
+for (metab in recover) {
+  metab_data_filtered[, metab] <-
+    as.numeric(metab_data_filtered[, metab]) %>%
+    replace_na(min(metab_data_filtered[, metab], na.rm = TRUE))
+}
+
 # Log transform readings, median has been scaled to 1 but I don't think it has been log transformed
 metab_data_filtered_log <- log10(metab_data_filtered)
 
@@ -104,13 +111,13 @@ for(j in 1:ncol(metab_data_transformed)) {
 
 # Find metabolites with >20% missing
 percent_na_transformed <- apply(metab_data_transformed, MARGIN = 2, FUN = function(x) sum(is.na(x))/length(x))
-sum(percent_na_transformed > 0.2) # 8 metabolites are now missing >20% of readings
+sum(percent_na_transformed > 0.2) # 3 metabolites are now missing >20% of readings, keep them (max missing 20.3%)
 percent_na_transformed[which(percent_na_transformed > 0.2)]
 
 # Subjects missing more than 20%
 percent_na_subjects <- apply(metab_data_transformed, MARGIN = 1, FUN = function(x) sum(is.na(x))/length(x))
 percent_na_subjects[percent_na_subjects > .2]
-keep_subjects <- setdiff(row.names(pheno), c("R7506996", "R2730285")) # Keep R1538032, only 20.17% missing
+keep_subjects <- setdiff(row.names(pheno), c("R7506996", "R2730285"))
 
 # Filter to only subjects that have low missingness
 pheno_clean <- pheno[keep_subjects,]

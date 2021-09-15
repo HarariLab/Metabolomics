@@ -144,8 +144,8 @@ volcano <- function(input, output, session, compare) {
   metab_by_subject <- reactive({
     selected <- event_data(event = "plotly_click")$pointNumber + 1
     metab_counts <- data.frame(
-      colnames(Origscale_clean_transformed_t)[1:454],
-      unlist(c(Origscale_clean_transformed_t[Origscale_clean_transformed_t$BIOCHEMICAL == volcano_data()[selected,1], 1:454]))
+      colnames(Origscale_clean_transformed_t)[1:453],
+      unlist(c(Origscale_clean_transformed_t[Origscale_clean_transformed_t$BIOCHEMICAL == volcano_data()[selected,1], 1:453]))
     )
     colnames(metab_counts) <- c("id", "count")
     #metab_counts$count <- log10(metab_counts$count)
@@ -172,7 +172,8 @@ volcano <- function(input, output, session, compare) {
       text = paste("Transformed Reading: ",
                    format(metab_by_subject()$count[metab_by_subject()$CACO %in% c("CO", "AD", "TREM2", "ADAD")], digits = 3)),
       hoverinfo = list("median", "text"),
-      colors = "Dark2"
+      colors = "Dark2",
+      source = "B"
     ) %>%
       layout(
         title = volcano_data()[event_data(event = "plotly_click")$pointNumber + 1,1],

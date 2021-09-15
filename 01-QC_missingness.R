@@ -7,8 +7,13 @@ Origscale <- read.csv("data/OrigScale_metabolites_known.csv", stringsAsFactors =
 replicate_pairs <- read.csv("data/replicates.csv", head=T, stringsAsFactors = FALSE)
 pheno <- read.csv("data/00-pheno_extract.csv", stringsAsFactors = FALSE)
 
+# Remove individual with mismatched status
+drop_ids <- pheno$TubeBarcode[pheno$Final_Status == "Neuro_CO" & pheno$CDR_Expire == 1 | is.na(pheno$Final_Status)]
+pheno <- pheno %>% filter(!TubeBarcode %in% drop_ids)
+Origscale <- Origscale[,setdiff(colnames(Origscale),  drop_ids)]
+
 # Make sure phenofile and metabolite data are in the same order
-ordered_tubes <- data.frame(TubeBarcode = colnames(Origscale[14:487]))
+ordered_tubes <- data.frame(TubeBarcode = colnames(Origscale[14:484]))
 pheno <- inner_join(ordered_tubes, pheno)
 pheno$Final_CACO <- as.factor(pheno$Final_CACO)
 
@@ -63,7 +68,7 @@ for (j in 1:13){ # this loops across replicate values (1:13)
       avg_reps[i,j] <- mean(couple)
     } 
     else if (test == 1) { # if one value present, check a few conditions to keep or drop
-      distrib <- quantile(Origscale[i,14:487], c(0.1,0.9), na.rm = TRUE)
+      distrib <- quantile(Origscale[i,14:484], c(0.1,0.9), na.rm = TRUE)
       val <- couple[which(!is.na(couple))]
       if (val < distrib[1]) { # if second value is <10th percentile, keep
         avg_reps[i,j] <- val # keep value
@@ -91,26 +96,24 @@ Origscale_avgreps <- cbind(Origscale_noreps2, avg_reps)
 
 
 # Count missing values by metabolite, transform to percentage, create df
-pct_missing <- apply(Origscale_avgreps[,-(1:13)], MARGIN = 1, FUN = function(x) sum(is.na(x))/461)
+pct_missing <- apply(Origscale_avgreps[,-(1:13)], MARGIN = 1, FUN = function(x) sum(is.na(x))/460)
 
 # Drop irrelevent columns
-drop_fields <- c("PATHWAY.SORTORDER","PLATFORM", "CHEMICAL.ID", "RI", "MASS", "PUBCHEM", "CAS", "KEGG", "Group.HMDB")
+drop_fields <- c("PATHWAY.SORTORDER","PLATFORM", "COMP.ID", "RI", "MASS", "PUBCHEM", "CAS", "KEGG", "Group.HMDB")
 missingvals_full_df <- Origscale_avgreps[,!(names(Origscale_avgreps) %in% drop_fields)]
 missingvals_full_df$pct_missing <- pct_missing
 
 missing20_full <- missingvals_full_df %>% filter(pct_missing >= 0.2)
-missing20_full$SUPER.PATHWAY <- as.factor(missing20_full$SUPER.PATHWAY)
-
 
 ###### Get pheno for only averaged values
-pheno_avg <- pheno[pheno$TubeBarcode %in% colnames(Origscale_avgreps[14:474]),]
-ordered_tubes <- as.data.frame(colnames(Origscale_avgreps[14:474]))
+pheno_avg <- pheno[pheno$TubeBarcode %in% colnames(Origscale_avgreps[14:471]),]
+ordered_tubes <- as.data.frame(colnames(Origscale_avgreps[14:471]))
 colnames(ordered_tubes) <- "TubeBarcode"
 pheno_avg <- inner_join(ordered_tubes, pheno_avg)
 
 all(pheno_avg$TubeBarcode == colnames(Origscale_avgreps[,-c(1:13)]))
 
-missing20_status_missing <- apply(missing20_full[,5:465], 1, FUN = function(x) pheno_avg$Final_CACO[is.na(x)])
+missing20_status_missing <- apply(missing20_full[,5:463], 1, FUN = function(x) pheno_avg$Final_CACO[is.na(x)])
 names(missing20_status_missing) <- missing20_full$BIOCHEMICAL
 
 ## Fisher Tests
@@ -163,23 +166,23 @@ get_effect_pval <- function(metab_name, model_data, status, ADAD = FALSE) {
     
     if(ADAD == TRUE) {
       model <- lm(reading ~ Final_CACO + SEX,
-                   data = readings)
+                  data = readings)
     }
     else {
       model <- lm(reading ~ Final_CACO + SEX + AAD,
-                   data = readings)
+                  data = readings)
     }
     fstat <- summary(model)$fstatistic
     fpval <- pf(fstat[1], fstat[2], fstat[3], lower.tail = FALSE)
     if (!is.na(fpval) & fpval < 0.05) {
-  
-    df <- data.frame(
-      metab_name = metab_name,
-      effect = as.matrix(summary(model)$coefficients)[paste("Final_CACO", status, sep = ""),"Estimate"],
-      pval = as.matrix(summary(model)$coefficients)[paste("Final_CACO", status, sep = ""),"Pr(>|t|)"]
-    )
-    colnames(df)[2:3] <- c(paste0(status, "_effect"), paste0(status, "_pval"))
-    df
+      
+      df <- data.frame(
+        metab_name = metab_name,
+        effect = as.matrix(summary(model)$coefficients)[paste("Final_CACO", status, sep = ""),"Estimate"],
+        pval = as.matrix(summary(model)$coefficients)[paste("Final_CACO", status, sep = ""),"Pr(>|t|)"]
+      )
+      colnames(df)[2:3] <- c(paste0(status, "_effect"), paste0(status, "_pval"))
+      df
     }
     else {
       df <- data.frame(metab_name = metab_name, effect = NA, pval = NA)
@@ -187,10 +190,10 @@ get_effect_pval <- function(metab_name, model_data, status, ADAD = FALSE) {
       df
     }
   }
-else {
-  df <- data.frame(metab_name = metab_name, effect = NA, pval = NA)
-  colnames(df)[2:3] <- c(paste0(status, "_effect"), paste0(status, "_pval"))
-  df
+  else {
+    df <- data.frame(metab_name = metab_name, effect = NA, pval = NA)
+    colnames(df)[2:3] <- c(paste0(status, "_effect"), paste0(status, "_pval"))
+    df
   }
 }
 
@@ -298,9 +301,12 @@ for (metab in restore) {
 }
 
 # Check whether any individuals have missingness >20%
-subject_missingness <- apply(Origscale_clean_avgreps[,14:474], MARGIN = 2, FUN = function(x) sum(is.na(x))/627)
+subject_missingness <- apply(Origscale_clean_avgreps[,14:471], MARGIN = 2, FUN = function(x) sum(is.na(x))/627)
 any(subject_missingness > 0.2) # FALSE
-  
+max(subject_missingness)
+
+quantile(subject_missingness, probs=0.95)
+
 # write.csv(Origscale_clean_avgreps, "data/01-Origscale_clean_avgreps.csv", row.names = FALSE)
 
 

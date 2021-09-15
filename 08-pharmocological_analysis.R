@@ -2,8 +2,8 @@ library(plyr)
 library(dplyr)
 
 # Read in metabolomics and meds data
-model_data_all <- readRDS("data/05-model_data_all.rds")
-pheno <- readRDS("data/03-pheno_avg.rds")
+model_data_all <- readRDS("data/04-model_data_all.rds")
+pheno <- read.csv("data/03-pheno_avg.csv", row.names = 1, stringsAsFactors = FALSE)
 trem2_ind <- pheno$TREM2_all_variants != "0" & !is.na(pheno$TREM2_all_variants)
 pheno$Final_CACO[trem2_ind] <- "TREM2"
 
@@ -30,7 +30,7 @@ model_data_all$AAO[model_data_all$AAO == "PC"] <- NA
 model_data_all$AAO[model_data_all$AAO == ".m"] <- NA
 model_data_all$AAO <- as.numeric(model_data_all$AAO)
 model_data_all$duration <- model_data_all$Age - as.numeric(model_data_all$AAO)
-model_data_all <- model_data_all[,c(639:641,1:638)]
+model_data_all <- model_data_all[,c(636:638,1:635)]
 
 # Get only statuses of interest that also have meds data
 model_data_filtered <-
@@ -54,6 +54,10 @@ meds_pheno_filtered_latest  <-
   group_by(UniquePhenoID) %>%
   slice_max(order_by = testdate_dt)
 
+mean(meds_pheno_filtered_latest$yeardiff)
+sd(meds_pheno_filtered_latest$yeardiff)
+min(meds_pheno_filtered_latest$yeardiff)
+max(meds_pheno_filtered_latest$yeardiff)
 
 # Define functions
 # Make a data frame with effect and p-value
@@ -81,7 +85,6 @@ fluox_names <- c("PROZAC", "FLUOXETI", "fluoxetine")
 
 # Get all rows including fluox
 has_any_fluox <- apply(meds_pheno_filtered, MARGIN = 1, function(x) any(x %in% fluox_names))
-sum(has_any_fluox)
 sum(has_any_fluox)
 
 # Data for only IDs with fluox
@@ -122,6 +125,21 @@ trem2_effect_pval_df <- ldply(colnames(model_data_trem2[,-1:-14]),
 trem2_effect_pval_df$padj <- p.adjust(trem2_effect_pval_df$pval, method = "BH")
 
 head(trem2_effect_pval_df[order(trem2_effect_pval_df$padj),])
+
+# Check association of fluox with other variables
+model_data_all$has_any_fluox <- model_data_all$MAPID %in% any_fluox_data$UniquePhenoID
+
+# Binomial regression for age at death
+mod <- glm(has_any_fluox ~ Age, data = model_data_all[model_data_all$Status == "CA",], family = binomial)
+summary(mod)
+
+# Binomial regression for age at onset
+mod <- glm(has_any_fluox ~ AAO, data = model_data_all[model_data_all$Status == "CA",], family = binomial)
+summary(mod)
+
+# Binomial regression for duration
+mod <- glm(has_any_fluox ~ duration, data = model_data_all[model_data_all$Status == "CA",], family = binomial)
+summary(mod)
 
 # Vitamins
 ## Check for any vitamins
