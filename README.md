@@ -1,9 +1,3 @@
----
-output:
-  html_document: default
-  word_document: default
-  pdf_document: default
----
 # Metabolomic and lipidomic signatures in autosomal dominant and late-onset Alzheimer disease brains
 
 ### Scripts used to QC and analyze metabolomics data
