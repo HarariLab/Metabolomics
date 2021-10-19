@@ -45,8 +45,11 @@ output:
 
 #### **ROSMAP and ADNI p180 datasets**
 
-##### 09-ROSMAP_p180_analysis.R
-- Full cleaning and analysis of ROSMAP DLPFC and serum samples
+##### 09.1-ROSMAP_p180_analysis.R
+- Full cleaning and analysis of ROSMAP serum samples
+
+##### 09.2-ROSMAP_p180_analysis.R
+- Full cleaning and analysis of ROSMAP DLPFC samples (p180 only)
 
 ##### 10-ADNI1_analysis.R
 - Full cleaning and analysis of ADNI1 serum samples
@@ -62,7 +65,10 @@ output:
 ##### 13-ROSMAP_Metabolon_clean_phenotypic_data.R
 - Create phenotype data frame to be used with ROSMAP Metabolon data
 
-##### 14-ROSMAP_Metabolon_QC_missingness.R
+##### 14.1-ROSMAP_Metabolon_QC_missingness_cogdx_recovery.R
+- Recovery of metabolites using consensus clinical diagnosis for ROSMAP Metabolon data, same process as 01-QC_missingness.R
+
+##### 14.2-ROSMAP_Metabolon_QC_missingness.R
 - Missingness QC for ROSMAP Metabolon data, same process as 01-QC_missingness.R
 
 ##### 15-ROSMAP_Metabolon_QC_PCA.R

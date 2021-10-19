@@ -113,7 +113,7 @@ head(ad_effect_pval_df[order(ad_effect_pval_df$padj),])
 # TREM2 vs CO
 model_data_trem2 <- 
   model_data_all %>%
-  filter(Status %in% c("TREM2", "CO") & !MAPID %in% any_fluox_data$UniquePhenoID)
+  filter(Status %in% c("TREM2", "CO") & !MAPID %in% any_fluox_data$UniquePhenoID[any_fluox_data$yeardiff <= 5])
 model_data_trem2$Status <- relevel(model_data_trem2$Status, ref = "CO")
 
 table(model_data_trem2$Status)
@@ -125,6 +125,11 @@ trem2_effect_pval_df <- ldply(colnames(model_data_trem2[,-1:-14]),
 trem2_effect_pval_df$padj <- p.adjust(trem2_effect_pval_df$pval, method = "BH")
 
 head(trem2_effect_pval_df[order(trem2_effect_pval_df$padj),])
+
+# Check association of fluoxetine usage in past 5 years with beta-citrylglutamate levels
+model_data_all$fluox_last_5 <- model_data_all$MAPID %in% any_fluox_data$UniquePhenoID[any_fluox_data$yeardiff <= 5]
+mod <- glm(fluox_last_5 ~ `100003271`, data = model_data_all[model_data_all$Status == "CA",], family = binomial)
+summary(mod)
 
 # Check association of fluox with other variables
 model_data_all$has_any_fluox <- model_data_all$MAPID %in% any_fluox_data$UniquePhenoID

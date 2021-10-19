@@ -6,6 +6,7 @@ setwd("~/ROSMAP_metabolon")
 
 metab_data_transformed <- readRDS("data/14-metab_data_transformed.rds")
 pheno <- readRDS("data/14-ROSMAP_pheno_clean.rds")
+metab_meta <- readRDS("data/01-metab_meta.rds")
 
 # Put pheno and metab data together
 metab_data_transformed$individualID <- row.names(metab_data_transformed)

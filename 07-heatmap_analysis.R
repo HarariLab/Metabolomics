@@ -334,13 +334,13 @@ summary(eigen_model_CO_ESAD)
 # CO vs sAD
 PC1_df_CO_sAD <- filter(PC1_df_withpresym, Status %in% c("CO", "AD")) %>% inner_join(anno)
 
-eigen_model_CO_sAD <- glm(Status ~ PC1 + Sex + PMI, data = PC1_df_CO_sAD, family = binomial)
+eigen_model_CO_sAD <- glm(Status ~ PC1 + Age + Sex + PMI, data = PC1_df_CO_sAD, family = binomial)
 summary(eigen_model_CO_sAD)
 
 # CO vs TREM2
 PC1_df_CO_TREM2 <- filter(PC1_df_withpresym, Status %in% c("CO", "TREM2")) %>% inner_join(anno)
 
-eigen_model_CO_TREM2 <- glm(Status ~ PC1 + Sex + PMI, data = PC1_df_CO_TREM2, family = binomial)
+eigen_model_CO_TREM2 <- glm(Status ~ PC1 + Age + Sex + PMI, data = PC1_df_CO_TREM2, family = binomial)
 summary(eigen_model_CO_TREM2)
 
 # CO vs ADAD
@@ -382,12 +382,12 @@ colnames(pvals) <- c("group1", "group2")
 
 pvals$p.adj <- c(
   "0.176",
-  "0.057",
+  "5.67x10\U207B\U2070\U00B2",
   "2.38x10\U207B\U2070\U2078",
   "0.661",
-  "1.26x10\U207B\U2070\U2077",
-  "0.006",
-  "0.012",
+  "1.05x10\U207B\U2070\U2077",
+  "3.53x10\U207B\U2070\U00B3",
+  "1.24x10\U207B\U2070\U00B2",
   "3.21x10\U207B\U2070\U2075"
 )
 

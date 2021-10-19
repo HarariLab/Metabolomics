@@ -25,18 +25,26 @@ pheno$msex <-
   ) %>%
   as.factor()
 
-# Recode diagnosis
+# Recode diagnosis based on CERAD, Braak, and cogdx
 pheno$Status <-
-  pheno$cogdx %>%
+  pheno$ceradsc %>%
   recode(
-    "1" = "CO",
-    "2" = "MCI",
-    "3" = "MCI",
-    "4" = "AD",
-    "5" = "AD",
-    "6" = "Other"
-  ) %>%
-  as.factor()
+    "1" = "AD",
+    "2" = "PROB",
+    "3" = "POSS",
+    "4" = "NOT"
+  )
+
+pheno$Status[pheno$Status == "POSS" & pheno$braaksc < 4] <- "CO"
+pheno$Status[pheno$Status == "NOT" & pheno$braaksc < 4] <- "CO"
+pheno$Status[pheno$Status == "PROB" & pheno$braaksc >= 4] <- "AD"
+pheno$Status[pheno$Status == "POSS"] <- "Other"
+pheno$Status[pheno$Status == "PROB"] <- "Other"
+pheno$Status[pheno$Status == "NOT"] <- "Other"
+
+pheno$Status[pheno$Status == "AD" & pheno$cogdx == 1] <- "Other"
+pheno$Status[pheno$Status == "CO" & pheno$cogdx %in% c(4,5,6)] <- "Other"
+
 
 # Recode age and set as numeric
 pheno$age_death <- 

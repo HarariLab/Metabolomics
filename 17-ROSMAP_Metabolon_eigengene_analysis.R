@@ -58,6 +58,10 @@ ggplot(pheno_ad, aes(x = Status, y = PC1, fill = Status)) +
   scale_fill_manual(values=c("#F8766D", "#00C19F")) +
   theme(legend.position = "none")
 
+# Test eigengene between groups
+eigen_model <- glm(Status ~ PC1 + age_death + msex + pmi, data = pheno_ad, family = binomial)
+summary(eigen_model)
+
 # Check association with duration
 pheno_ad$age_first_ad_dx <-
   pheno_ad$age_first_ad_dx %>%
@@ -78,3 +82,37 @@ summary(mod1)
 # Check association with Braak tau
 mod2 <- glm(PC1 ~ braaksc + age_death + msex + pmi, data = pheno_ad, family = gaussian)
 summary(mod2)
+
+
+# Test association with consensus clinical diagnosis
+## Cognitive status
+pheno$Status2 <-
+  pheno$cogdx %>%
+  recode(
+    "1" = "CO",
+    "2" = "MCI",
+    "3" = "MCI",
+    "4" = "AD",
+    "5" = "AD",
+    "6" = "Other"
+  ) %>%
+  as.factor()
+
+pheno_cog_ad <- pheno %>% filter(Status2 %in% c("AD", "CO"))
+
+table(pheno$Status, pheno$Status2)
+
+metabs_15_cog <- metab_data_impute[pheno_cog_ad$individualID,metab_names]
+
+# Get PC1
+pca_obj_cog <- PCA(metabs_15_cog, graph = FALSE)
+pca_ind_cog <- pca_obj_cog$ind$coord
+
+# Add PC1 to pheno info and plot
+pheno_cog_ad$Status2 <- factor(pheno_cog_ad$Status2, levels = c("CO", "AD"))
+
+all(row.names(pca_ind_cog) == pheno_cog_ad$individualID)
+pheno_cog_ad$PC1 <- pca_ind_cog[,1]
+
+eigen_model_cog <- glm(Status2 ~ PC1 + age_death + msex + pmi, data = pheno_cog_ad, family = binomial)
+summary(eigen_model_cog)
