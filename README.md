@@ -94,6 +94,6 @@ The browser can be accessed at http://ngi.pub/Metabolomics/.
 ##### volcano.R
 - Module for "Volcano Plots" tab, plot DE results, show boxplots, and specific metabolite information
 
-
-
+## Contact
+Brenna Novotny: bnovotny@wustl.edu
 
