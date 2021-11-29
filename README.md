@@ -78,6 +78,8 @@
 
 ## Metabolomics Browser
 
+The browser can be accessed at http://ngi.pub/Metabolomics/.
+
 ##### app.R
 - Main app file, load data and call modules
 
