@@ -1,6 +1,6 @@
 # Metabolomic and lipidomic signatures in autosomal dominant and late-onset Alzheimer disease brains
 
-### Scripts used to QC and analyze metabolomics data
+### Scripts used to QC and analyze metabolomics data for [Novotny et al. (2021) Metabolomic and lipidomic signatures in autosomal dominant and late-onset Alzheimer disease brains](https://doi.org/10.1101/2021.11.04.21265941)
 
 ---
 
