@@ -83,3 +83,86 @@ effect_pval_apoe_joined <- full_join(effect_pval_apoe_orig, effect_pval_apoe, by
 
 # write.csv(effect_pval_apoe, "data/16-effect_pval_apoe_ROSMAP.csv")
 # write.csv(effect_pval_apoe_joined, "data/16-effect_pval_apoe_joined.csv")
+
+### Check metabolite associations with age
+## Linear regression modeling metabolite values by age, sex, and PMI with only sAD samples
+model_data_ADonly <- 
+  model_data %>%
+  filter(Status == "AD")
+
+get_effect_pval_age <- function(metab_name, model_data) {
+  readings <- cbind(model_data[,c("Status", "age_death", "pmi", "msex")], model_data[,metab_name])
+  colnames(readings)[ncol(readings)] <- "reading"  
+  readings <- readings[!is.na(readings$reading),]
+  model <- glm(reading ~ age_death + msex + pmi,
+               data = readings, family = gaussian)
+  data.frame(
+    metab_name = metab_name,
+    effect = as.matrix(summary(model)$coefficients)["age_death","Estimate"],
+    pval = as.matrix(summary(model)$coefficients)["age_death","Pr(>|t|)"]
+  )
+}
+
+effect_pval_age <- ldply(colnames(model_data_ADonly[,-1:-20]), 
+                         get_effect_pval_age,
+                         model_data = model_data_ADonly)
+effect_pval_age$padj <- p.adjust(effect_pval_age$pval, method = "BH")
+all(effect_pval_age$metab_name == metab_meta$SHORT_NAME)
+effect_pval_age$CHEMICAL.ID <- metab_meta$CHEM_ID
+effect_pval_age <- 
+  rename(effect_pval_age,
+         "effect_ROSMAP_AD" = "effect",
+         "pval_ROSMAP_AD" = "pval",
+         "padj_ROSMAP_AD" = "padj",
+         "metab_id" = "CHEMICAL.ID")
+# write.csv(effect_pval_age, "data/03-effect_pval_age.csv", row.names = FALSE)
+
+## Check association with age in only <90yo 
+model_data_ADonly_under90 <- 
+  model_data %>%
+  filter(age_death < 90)
+
+effect_pval_age_under90 <- ldply(colnames(model_data_ADonly_under90[,-1:-20]), 
+                                 get_effect_pval_age,
+                                 model_data = model_data_ADonly_under90)
+effect_pval_age_under90$padj <- p.adjust(effect_pval_age_under90$pval, method = "BH")
+all(effect_pval_age_under90$metab_name == metab_meta$SHORT_NAME)
+effect_pval_age_under90$CHEMICAL.ID <- metab_meta$CHEM_ID
+effect_pval_age_under90 <- 
+  rename(effect_pval_age_under90,
+         "effect_ROSMAP_AD_under90" = "effect",
+         "pval_ROSMAP_AD_under90" = "pval",
+         "padj_ROSMAP_AD_under90" = "padj",
+         "metab_id" = "CHEMICAL.ID")
+
+## Check assn with age in CO
+model_data_COonly <- 
+  model_data %>%
+  filter(Status == "CO")
+
+effect_pval_age_CO <- ldply(colnames(model_data_COonly[,-1:-20]), 
+                            get_effect_pval_age,
+                            model_data = model_data_COonly)
+effect_pval_age_CO$padj <- p.adjust(effect_pval_age_CO$pval, method = "BH")
+all(effect_pval_age_CO$metab_name == metab_meta$SHORT_NAME)
+effect_pval_age_CO$CHEMICAL.ID <- metab_meta$CHEM_ID
+effect_pval_age_CO <- 
+  rename(effect_pval_age_CO,
+         "effect_ROSMAP_CO" = "effect",
+         "pval_ROSMAP_CO" = "pval",
+         "padj_ROSMAP_CO" = "padj",
+         "metab_id" = "CHEMICAL.ID")
+
+## Check in only <90 yo
+effect_pval_age_CO_under90 <- ldply(colnames(model_data_COonly[,-1:-20]), 
+                                    get_effect_pval_age,
+                                    model_data = model_data_COonly[model_data_COonly$age_death < 90,])
+effect_pval_age_CO_under90$padj <- p.adjust(effect_pval_age_CO_under90$pval, method = "BH")
+all(effect_pval_age_CO_under90$metab_name == metab_meta$SHORT_NAME)
+effect_pval_age_CO_under90$CHEMICAL.ID <- metab_meta$CHEM_ID
+effect_pval_age_CO_under90 <- 
+  rename(effect_pval_age_CO_under90,
+         "effect_ROSMAP_CO_under90" = "effect",
+         "pval_ROSMAP_CO_under90" = "pval",
+         "padj_ROSMAP_CO_under90" = "padj",
+         "metab_id" = "CHEMICAL.ID")

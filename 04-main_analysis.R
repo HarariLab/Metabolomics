@@ -168,7 +168,7 @@ get_effect_pval_age <- function(metab_id, model_data) {
   )
 }
 
-# Create data frame with effects, pvals, and padj for each metabolite
+# Metabolite associations with age in sAD
 effect_pval_age_ca <- ldply(colnames(model_data_caonly[,-1:-ncol(covariates)]), 
                             get_effect_pval_age,
                             model_data = model_data_caonly)
@@ -177,6 +177,15 @@ sum(effect_pval_age_ca$padj < 0.05)
 all(effect_pval_age_ca$metab_id == metab_meta$CHEMICAL.ID)
 effect_pval_age_ca$metab_name <- metab_meta$BIOCHEMICAL
 # write.csv(effect_pval_age_ca, "data/04-effect_pval_age.csv", row.names = FALSE)
+
+# Metabolite associations with age in CO
+effect_pval_age_co <- ldply(colnames(model_data_coonly[,-1:-ncol(covariates)]), 
+                            get_effect_pval_age,
+                            model_data = model_data_coonly)
+effect_pval_age_co$padj <- p.adjust(effect_pval_age_co$pval, method = "BH")
+sum(effect_pval_age_co$padj < 0.05)
+if (all(effect_pval_age_co$metab_id == metab_meta$CHEMICAL.ID))  effect_pval_age_co$metab_name <- metab_meta$BIOCHEMICAL
+# write.csv(effect_pval_age_co, "data/04-effect_pval_age_co.csv", row.names = FALSE)
 
 # How many metabolites significant in ADAD are independent of age?
 sum(!adad_effect_pval_df$metab_id[adad_effect_pval_df$ADADvsCO_padj < 0.05] %in% effect_pval_age_ca$metab_id[effect_pval_age_ca$padj < 0.05])

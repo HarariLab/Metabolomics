@@ -22,7 +22,7 @@
 - Remove outlier samples
 
 ##### 04-main_analysis.R
-- Main analysis including linear regressions for each status group (also matched by CDR, BraakTau, and BraakAbeta), association with age at death in sAD, and association with APOE genotype
+- Main analysis including linear regressions for each status group (also matched by CDR, BraakTau, and BraakAbeta), association with age at death in sAD and CO, and association with APOE genotype
 
 ##### 05-effect_comparison.R
 - Compare effects of 16 common metabolites between ADAD, TREM2, and sAD. ANCOVA tests with and without matching individuals by CDR, BraakTau, and BraakAbeta
