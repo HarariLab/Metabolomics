@@ -74,6 +74,9 @@
 ##### 17-ROSMAP_Metabolon_eigengene_analysis.R
 - Calculate eigengene for the 15 available metbolites in ROSMAP Metabolon data, check association with disease duration and Braak tau
 
+##### 18-EOAD_vs_LOAD.R
+- Stratify sAD into EOAD (AAO<65 years) and LOAD (AAO>=65 years), check differential abundance and phenotypic variables
+
 ---
 
 ## Metabolomics Browser
