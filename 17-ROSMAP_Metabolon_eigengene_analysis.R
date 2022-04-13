@@ -83,6 +83,10 @@ summary(mod1)
 mod2 <- glm(PC1 ~ braaksc + age_death + msex + pmi, data = pheno_ad, family = gaussian)
 summary(mod2)
 
+# Check association with Braak tau in only AD
+pheno_adonly <- pheno_ad %>% dplyr::filter(Status == "AD")
+mod2_adonly <- glm(PC1 ~ braaksc + age_death + msex + pmi, data = pheno_adonly, family = gaussian)
+summary(mod2_adonly)
 
 # Test association with consensus clinical diagnosis
 ## Cognitive status

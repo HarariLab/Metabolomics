@@ -92,10 +92,14 @@ model_data_PC1_CDR <-
     PC1_df
   )
 
-# Test assoc with CDR for all statuses together, with and without age at death as
-# a covariate.
+# Test assoc with CDR for all statuses together
 mod_CDR_PC1_withage <- glm(PC1 ~ CDR + Age + Sex + PMI, data = model_data_PC1_CDR, family = gaussian)
 summary(mod_CDR_PC1_withage)
+
+# Test assoc with CDR for only AD
+model_data_PC1_CDR_ADonly <- model_data_PC1_CDR %>% dplyr::filter(Status == "CA")
+mod_CDR_PC1_withage_ADonly <- glm(PC1 ~ CDR + Age + Sex + PMI, data = model_data_PC1_CDR_ADonly, family = gaussian)
+summary(mod_CDR_PC1_withage_ADonly)
 
 
 ## Regression for PC1 ~ BraakTau for 17 metabs
@@ -122,6 +126,11 @@ model_data_PC1_tau <-
 # All statuses together
 mod_tau_PC1_withage <- glm(PC1 ~ BraakTau + Age + Sex + PMI, data = model_data_PC1_tau, family = gaussian)
 summary(mod_tau_PC1_withage)
+
+# Only sAD
+model_data_PC1_tau_ADonly <- model_data_PC1_tau %>% dplyr::filter(Status == "CA")
+mod_tau_PC1_withage_ADonly <- glm(PC1 ~ BraakTau + Age + Sex + PMI, data = model_data_PC1_tau_ADonly, family = gaussian)
+summary(mod_tau_PC1_withage_ADonly)
 
 ## Regression for PC1 ~ BraakAbeta for 16 metabs
 model_data_abeta_small <- 
@@ -211,6 +220,11 @@ model_data_PC1_CDR_nonic <-
 mod_CDR_PC1_withage_nonic <- glm(PC1 ~ CDR + Age + Sex + PMI, data = model_data_PC1_CDR_nonic, family = gaussian)
 summary(mod_CDR_PC1_withage_nonic)
 
+# Test assoc with CDR for only AD without nicotinamide
+model_data_PC1_CDR_ADonly_nonic <- model_data_PC1_CDR_nonic %>% dplyr::filter(Status == "CA")
+mod_CDR_PC1_withage_ADonly_nonic <- glm(PC1 ~ CDR + Age + Sex + PMI, data = model_data_PC1_CDR_ADonly_nonic, family = gaussian)
+summary(mod_CDR_PC1_withage_ADonly_nonic)
+
 ## Tau no nicotinamide 
 model_data_PC1_tau_nonic <-
   inner_join(
@@ -221,6 +235,11 @@ model_data_PC1_tau_nonic <-
 # All statuses together
 mod_tau_PC1_withage_nonic <- glm(PC1 ~ BraakTau + Age + Sex + PMI, data = model_data_PC1_tau_nonic, family = gaussian)
 summary(mod_tau_PC1_withage_nonic)
+
+# Only sAD
+model_data_PC1_tau_ADonly_nonic <- model_data_PC1_tau_nonic %>% dplyr::filter(Status == "CA")
+mod_tau_PC1_withage_ADonly_nonic <- glm(PC1 ~ BraakTau + Age + Sex + PMI, data = model_data_PC1_tau_ADonly_nonic, family = gaussian)
+summary(mod_tau_PC1_withage_ADonly_nonic)
 
 ## Duration no nicotinamide
 # Add PC1 to model_data
